@@ -113,21 +113,35 @@ would require a dedicated release signing configuration.
 
 ## Undergraduate reflection questions
 
-These are project-specific prompts and draft responses, not quotations from the
-unavailable assignment PDF. Review them against the professor's exact questions.
+The professor's exact questions are reproduced below, with draft answers for review.
 
-1. **How does the local simulation demonstrate an AI-style interaction while protecting signup data?**
-   The UI demonstrates loading, a result, an error, and retry using deterministic
-   local text. The coach has no access to the three form controllers or their
-   values. Its service accepts only an error-simulation flag, and the visible
-   preset label makes clear that no live model generated the advice.
+1. **Trace the local tip feature from button tap to displayed text. Which widget/state changes during the simulated loading state, and how does the user recover from the local error case?**
 
-2. **Why must signup validation remain independent of the coach, and what are the simulation's limitations?**
-   Advice is optional and must not approve invalid signup input. Only Sign Up
-   calls the form validator, and a successful tip never submits the form. Tests
-   verify that invalid email and password values remain invalid after requesting
-   a tip. Preset tips are predictable and easy to test but cannot personalize
-   advice, understand questions, or demonstrate real model reliability.
+   **Draft answer:** Tapping **Get a signup tip** calls `_getTip()` in
+   `_SignupCoachState`, which uses `setState` to clear the previous tip and set
+   `_state` to `_TipState.loading`; `SignupCoach` then shows a
+   `CircularProgressIndicator` and loading text while disabling the request
+   button and error checkbox.
+   After the 600 ms local delay, `LocalSignupTips.getTip()` returns a preset and
+   another `setState` stores it in `_tip` and selects `_TipState.success`, causing
+   `Text(_tip!)` to display it.
+   If **Simulate next error** was selected, the request instead enters
+   `_TipState.error` and shows **Retry**, which calls `_getTip()` again with the
+   one-shot error flag already reset; the loading, error, and retry tests verify
+   the indicator, disabled button, error message, and successful recovery.
+
+2. **Why must the app keep form validation local even when it can ask an AI for a tip? Give one example of a bad decision if AI were allowed to approve signup.**
+
+   **Draft answer:** Local validation enforces the required name, email, and
+   password rules consistently, while advice from an AI could be incorrect and
+   must never determine signup approval; this implementation uses only preset
+   local tips and gives the coach no access to form values or the form key.
+   A bad decision would be approving signup with the three-character password
+   `abc` because an AI called it acceptable, despite the six-character minimum.
+   The privacy-separation test confirms that requesting a tip preserves the
+   entered values and does not submit the form, and that subsequently pressing
+   **Sign Up** still rejects the invalid email and short password without
+   showing the success SnackBar.
 
 ## Source layout
 
